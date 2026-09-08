@@ -17,6 +17,8 @@ import Badges from './pages/Badges';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import TeacherDashboard from './pages/TeacherDashboard';
+import TeacherPageWrapper from './pages/TeacherPageWrapper';
+import MyClasses from './components/teacher/MyClasses';
 import { useApp } from './context/AppContext';
 
 // LT-005: Route guard for authenticated student users
@@ -65,6 +67,14 @@ function App() {
 
             <Route path="/teacher" element={<TeacherRoute><TeacherLayout /></TeacherRoute>}>
               <Route path="dashboard" element={<TeacherDashboard />} />
+              <Route path="classes" element={<TeacherPageWrapper title="My Classes"><MyClasses /></TeacherPageWrapper>} />
+              <Route path="create" element={<TeacherPageWrapper title="Create Lesson" />} />
+              <Route path="lessons" element={<TeacherPageWrapper><MyLessons /></TeacherPageWrapper>} />
+              <Route path="live" element={<TeacherPageWrapper><LiveClass /></TeacherPageWrapper>} />
+              <Route path="translate" element={<TeacherPageWrapper><Translate /></TeacherPageWrapper>} />
+              <Route path="chat" element={<TeacherPageWrapper title="Student Interaction" />} />
+              <Route path="analytics" element={<TeacherPageWrapper title="Analytics" />} />
+              <Route path="reminders" element={<TeacherPageWrapper title="Reminders" />} />
               <Route path="*" element={<Navigate to="/teacher/dashboard" replace />} />
             </Route>
 
