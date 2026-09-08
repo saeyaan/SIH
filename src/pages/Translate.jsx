@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { useToast } from '../context/ToastContext';
-import { Languages, ArrowRightLeft, Copy, Loader2 } from 'lucide-react';
+import { Languages, ArrowRightLeft, Copy, Loader2, Volume2, Square } from 'lucide-react';
+import { translateText } from '../utils/translationService';
 
 const Translate = () => {
   const [sourceText, setSourceText] = useState('');
@@ -10,43 +11,91 @@ const Translate = () => {
   const [sourceLang, setSourceLang] = useState('English');
   const [targetLang, setTargetLang] = useState('Hindi');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { addToast } = useToast();
 
-  const handleTranslate = () => {
+  const isCombinationSupported = (src, tgt) => {
+    if (src === tgt) return false;
+    if ((src === 'Hindi' && tgt === 'Bengali') || (src === 'Bengali' && tgt === 'Hindi')) {
+      return false;
+    }
+    return true;
+  };
+
+  const handleTranslate = async () => {
     if (!sourceText.trim()) {
       addToast('Please enter text to translate.', 'warning');
       return;
     }
+
+    if (!isCombinationSupported(sourceLang, targetLang)) {
+      addToast('This language combination is not supported.', 'error');
+      return;
+    }
     
     setIsTranslating(true);
+    setTranslatedText('');
     
-    // Simulate API call
-    setTimeout(() => {
-      setTranslatedText(`[Mock ${targetLang} Translation]: ${sourceText}`);
+    try {
+      const result = await translateText(sourceText, sourceLang, targetLang);
+      setTranslatedText(result);
+    } catch (error) {
+      addToast('Translation failed. Please try again.', 'error');
+    } finally {
       setIsTranslating(false);
-    }, 1500);
+    }
   };
 
   const handleSwap = () => {
-    // LT-018: Prevent same-language situation: only swap if languages are different
     if (sourceLang === targetLang) return;
     setSourceLang(targetLang);
     setTargetLang(sourceLang);
-    // Clear translated text on swap to avoid mock-prefixed string becoming source
     setSourceText('');
     setTranslatedText('');
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
   };
 
   const handleCopy = async () => {
     if (!translatedText) return;
-    // LT-017: Handle clipboard API failure gracefully
     try {
       await navigator.clipboard.writeText(translatedText);
-      addToast('Copied to clipboard!', 'success');
+      addToast('Copied!', 'success');
     } catch {
       addToast('Could not copy. Please copy manually.', 'error');
     }
   };
+
+  const handleSpeak = () => {
+    if (!translatedText) return;
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(translatedText);
+    
+    const langCodeMap = {
+      'English': 'en-IN',
+      'Hindi': 'hi-IN',
+      'Bengali': 'bn-IN'
+    };
+    
+    utterance.lang = langCodeMap[targetLang] || 'en-US';
+    
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      addToast('Speech synthesis failed.', 'error');
+    };
+
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const isValidPair = isCombinationSupported(sourceLang, targetLang);
 
   return (
     <>
@@ -63,7 +112,11 @@ const Translate = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
             <select 
               value={sourceLang} 
-              onChange={(e) => setSourceLang(e.target.value)}
+              onChange={(e) => {
+                setSourceLang(e.target.value);
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+              }}
               className="input-field"
               style={{ flex: 1, cursor: 'pointer', fontWeight: 600 }}
             >
@@ -81,15 +134,25 @@ const Translate = () => {
 
             <select 
               value={targetLang} 
-              onChange={(e) => setTargetLang(e.target.value)}
+              onChange={(e) => {
+                setTargetLang(e.target.value);
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+              }}
               className="input-field"
               style={{ flex: 1, cursor: 'pointer', fontWeight: 600 }}
             >
-              <option value="Hindi">Hindi</option>
               <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
               <option value="Bengali">Bengali</option>
             </select>
           </div>
+
+          {!isValidPair && (
+            <div style={{ color: 'red', textAlign: 'center', fontSize: '0.9rem' }}>
+              Translation between {sourceLang} and {targetLang} is not supported.
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '280px' }}>
@@ -110,17 +173,27 @@ const Translate = () => {
                 style={{ width: '100%', height: '180px', resize: 'none', color: 'var(--color-primary-dark)', fontWeight: 600, background: 'var(--color-bg-card)', boxShadow: 'var(--shadow-neu-outer-sm)' }}
               />
               {translatedText && (
-                <button 
-                  onClick={handleCopy}
-                  style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'var(--color-bg-card)', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', boxShadow: 'var(--shadow-neu-outer-sm)', color: 'var(--color-primary)' }}
-                >
-                  <Copy size={20} />
-                </button>
+                <div style={{ position: 'absolute', bottom: '16px', right: '16px', display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={handleSpeak}
+                    title="Listen to translation"
+                    style={{ background: 'var(--color-bg-card)', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', boxShadow: 'var(--shadow-neu-outer-sm)', color: 'var(--color-primary)' }}
+                  >
+                    {isSpeaking ? <Square size={20} /> : <Volume2 size={20} />}
+                  </button>
+                  <button 
+                    onClick={handleCopy}
+                    title="Copy to clipboard"
+                    style={{ background: 'var(--color-bg-card)', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', boxShadow: 'var(--shadow-neu-outer-sm)', color: 'var(--color-primary)' }}
+                  >
+                    <Copy size={20} />
+                  </button>
+                </div>
               )}
             </div>
           </div>
 
-          <Button variant="primary" onClick={handleTranslate} disabled={isTranslating} style={{ display: 'flex', justifyContent: 'center' }}>
+          <Button variant="primary" onClick={handleTranslate} disabled={isTranslating || !isValidPair || !sourceText.trim()} style={{ display: 'flex', justifyContent: 'center' }}>
             {isTranslating ? <><Loader2 size={20} className="spin-animation" /> Translating...</> : 'Translate'}
           </Button>
           

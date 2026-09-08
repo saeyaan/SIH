@@ -11,8 +11,7 @@ const TeacherPageWrapper = ({ title, children }) => {
           children
         ) : (
           <div className="card" style={{ padding: 'var(--spacing-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            <p>This is a placeholder page for <strong>{title}</strong>.</p>
-            <p>Component implementation coming soon.</p>
+            <p><strong>{title}</strong> will be implemented in a future update.</p>
           </div>
         )}
       </div>

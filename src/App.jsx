@@ -19,6 +19,10 @@ import Signup from './pages/Signup';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherPageWrapper from './pages/TeacherPageWrapper';
 import MyClasses from './components/teacher/MyClasses';
+import TeacherCreateLesson from './components/teacher/TeacherCreateLesson';
+import TeacherChat from './components/teacher/TeacherChat';
+import TeacherAnalytics from './components/teacher/TeacherAnalytics';
+import TeacherReminders from './components/teacher/TeacherReminders';
 import { useApp } from './context/AppContext';
 
 // LT-005: Route guard for authenticated student users
@@ -68,13 +72,13 @@ function App() {
             <Route path="/teacher" element={<TeacherRoute><TeacherLayout /></TeacherRoute>}>
               <Route path="dashboard" element={<TeacherDashboard />} />
               <Route path="classes" element={<TeacherPageWrapper title="My Classes"><MyClasses /></TeacherPageWrapper>} />
-              <Route path="create" element={<TeacherPageWrapper title="Create Lesson" />} />
+              <Route path="create" element={<TeacherPageWrapper title="Create Lesson"><TeacherCreateLesson /></TeacherPageWrapper>} />
               <Route path="lessons" element={<TeacherPageWrapper><MyLessons /></TeacherPageWrapper>} />
               <Route path="live" element={<TeacherPageWrapper><LiveClass /></TeacherPageWrapper>} />
               <Route path="translate" element={<TeacherPageWrapper><Translate /></TeacherPageWrapper>} />
-              <Route path="chat" element={<TeacherPageWrapper title="Student Interaction" />} />
-              <Route path="analytics" element={<TeacherPageWrapper title="Analytics" />} />
-              <Route path="reminders" element={<TeacherPageWrapper title="Reminders" />} />
+              <Route path="chat" element={<TeacherPageWrapper title="Student Interaction"><TeacherChat /></TeacherPageWrapper>} />
+              <Route path="analytics" element={<TeacherPageWrapper title="Analytics"><TeacherAnalytics /></TeacherPageWrapper>} />
+              <Route path="reminders" element={<TeacherPageWrapper title="Reminders"><TeacherReminders /></TeacherPageWrapper>} />
               <Route path="*" element={<Navigate to="/teacher/dashboard" replace />} />
             </Route>
 
