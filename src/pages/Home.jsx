@@ -1,65 +1,59 @@
 import React from 'react';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import { BookOpen, MessageSquare, Mic, Languages, ArrowRight, Video, Folder, Lock } from 'lucide-react';
+import { BookOpen, MessageSquare, Mic, Languages, ArrowRight, Folder, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
+import MyClassesStudent from '../components/student/MyClassesStudent';
 
 const Home = () => {
   const navigate = useNavigate();
   const { user, progress } = useApp();
+  const { t } = useLanguage();
 
   const features = [
-    { title: 'Learn', icon: BookOpen, desc: 'Explore lessons in your language', gradient: 'var(--grad-blue)', iconColor: '#5856d6', path: '/learn' },
-    { title: 'Ask AI', icon: MessageSquare, desc: 'Get simple answers to your questions', gradient: 'var(--grad-green)', iconColor: '#34c759', path: '/ask-ai' },
-    { title: 'Speak', icon: Mic, desc: 'Ask using your voice', gradient: 'var(--grad-pink)', iconColor: '#ff3b30', path: '/speak' },
-    { title: 'Translate', icon: Languages, desc: 'Understand in your language', gradient: 'var(--grad-orange)', iconColor: '#ff9500', path: '/translate' },
-    { title: 'Live Class', icon: Video, desc: 'Join real-time translated classes', gradient: 'var(--grad-blue)', iconColor: '#5e5ce6', path: '/live-class' },
-    { title: 'My Lessons', icon: Folder, desc: 'Continue where you left off', gradient: 'var(--grad-blue)', iconColor: '#00c6ff', path: '/my-lessons' },
+    { title: t('feat.learnTitle'), icon: BookOpen, desc: t('feat.learnDesc'), gradient: 'var(--grad-blue)', iconColor: '#5856d6', path: '/learn' },
+    { title: t('feat.askTitle'), icon: MessageSquare, desc: t('feat.askDesc'), gradient: 'var(--grad-green)', iconColor: '#34c759', path: '/ask-ai' },
+    { title: t('feat.translateTitle'), icon: Languages, desc: t('feat.translateDesc'), gradient: 'var(--grad-orange)', iconColor: '#ff9500', path: '/translate' },
+    { title: t('feat.myLessonsTitle'), icon: Folder, desc: t('feat.myLessonsDesc'), gradient: 'var(--grad-blue)', iconColor: '#00c6ff', path: '/my-lessons' },
   ];
 
   return (
     <>
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h1 style={{ color: 'var(--color-text-main)' }}>Welcome back, {(user.name || 'Learner').split(' ')[0]}! 👋</h1>
-        <p>Ready to continue your learning journey?</p>
+        <h1 style={{ color: 'var(--color-text-main)' }}>{t('home.welcome')}, {(user.name || 'Learner').split(' ')[0]}! 👋</h1>
+        <p>{t('home.readyToContinue')}</p>
       </div>
       
       <div className="card" style={{ background: 'var(--color-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--spacing-xl)', marginBottom: 'var(--spacing-xl)', border: 'none', borderRadius: 'var(--radius-xl)', gap: 'var(--spacing-xl)', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 300px' }}>
-          <h2 style={{ color: '#312e81', fontSize: 'var(--fs-h1)', marginBottom: 'var(--spacing-md)', lineHeight: '1.2' }}>
-            Learn Without Limits<br />
-            In Your Own Language
+          <h2 style={{ color: '#312e81', fontSize: 'var(--fs-h1)', marginBottom: 'var(--spacing-md)', lineHeight: '1.2', whiteSpace: 'pre-line' }}>
+            {t('home.heroTitle')}
           </h2>
           <p style={{ color: '#4f46e5', marginBottom: 'var(--spacing-lg)', fontWeight: 500, fontSize: 'var(--fs-body)' }}>
-            AI-powered learning for a brighter tomorrow.
+            {t('home.heroSubtitle')}
           </p>
           <Button variant="primary" onClick={() => navigate('/learn')} style={{ background: '#5e5ce6', borderRadius: 'var(--radius-full)' }}>
-            Continue Learning <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+            {t('home.continueLearning')} <ArrowRight size={18} style={{ marginLeft: '8px' }} />
           </Button>
         </div>
-        <div style={{ flex: '1 1 300px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-            <div style={{ position: 'relative', width: '100%', maxWidth: '450px' }}>
-              <img 
-                src="/hero_boy_globe_1788550838455.jpg" 
-                alt="Hero Illustration" 
-                onError={(e) => { e.target.style.display = 'none'; }}
-                style={{ 
-                  width: '100%', 
-                  display: 'block',
-                  objectFit: 'cover'
-                }} 
-              />
+        <div style={{ flex: '1 1 300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '380px' }}>
               <div style={{ 
-                position: 'absolute', 
-                top: 0, left: 0, right: 0, bottom: 0, 
-                boxShadow: 'inset 0 0 50px 30px #e4ebfa',
-                pointerEvents: 'none'
-              }} />
+                  width: '100%',
+                  aspectRatio: '1/1',
+                  backgroundImage: 'url("/hero_boy_globe_1788550838455.jpg")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  WebkitMaskImage: 'radial-gradient(circle at center, black 45%, transparent 75%)',
+                  maskImage: 'radial-gradient(circle at center, black 45%, transparent 75%)'
+              }}></div>
             </div>
         </div>
       </div>
 
+      <MyClassesStudent />
       <div className="grid-features" style={{ marginBottom: 'var(--spacing-xl)' }}>
         {features.map((feat) => (
           <Card key={feat.title} style={{ background: feat.gradient, display: 'flex', flexDirection: 'column', height: '100%', cursor: 'pointer', border: 'none' }} onClick={() => navigate(feat.path)}>
@@ -88,7 +82,7 @@ const Home = () => {
          <Card style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                    <span style={{ color: 'var(--color-primary)' }}>📊</span> Your Learning Journey
+                    <span style={{ color: 'var(--color-primary)' }}>📊</span> {t('home.learningJourney')}
                 </h3>
             </div>
             
@@ -100,8 +94,8 @@ const Home = () => {
                         <span style={{ color: 'var(--color-success)', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
                      </div>
                      <div>
-                        <h4 style={{ margin: 0, color: 'var(--color-text-main)' }}>Completed Lessons</h4>
-                        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-small)' }}>Great progress!</span>
+                        <h4 style={{ margin: 0, color: 'var(--color-text-main)' }}>{t('home.completedLessons')}</h4>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-small)' }}>{t('home.greatProgress')}</span>
                      </div>
                   </div>
                   <h3 style={{ margin: 0, color: 'var(--color-success)' }}>{progress.completedLessons.length}</h3>
@@ -115,8 +109,8 @@ const Home = () => {
                         <span style={{ color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>...</span>
                      </div>
                      <div>
-                        <h4 style={{ margin: 0, color: 'var(--color-text-main)' }}>In Progress</h4>
-                        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-small)' }}>Keep going!</span>
+                        <h4 style={{ margin: 0, color: 'var(--color-text-main)' }}>{t('home.inProgress')}</h4>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-small)' }}>{t('home.keepGoing')}</span>
                      </div>
                   </div>
                   <h3 style={{ margin: 0, color: 'var(--color-primary)' }}>{Object.keys(progress.inProgressLessons).length}</h3>
@@ -128,9 +122,9 @@ const Home = () => {
          <Card>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                    <span style={{ color: '#ffcc00' }}>⭐</span> Your Badges
+                    <span style={{ color: '#ffcc00' }}>⭐</span> {t('home.yourBadges')}
                 </h3>
-                <span style={{ fontSize: 'var(--fs-small)', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate('/badges')}>View All</span>
+                <span style={{ fontSize: 'var(--fs-small)', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate('/badges')}>{t('home.viewAll')}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--spacing-sm)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>

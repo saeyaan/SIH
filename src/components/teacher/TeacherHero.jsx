@@ -3,6 +3,7 @@ import { ArrowRight, Heart, Sun } from 'lucide-react';
 import Button from '../Button';
 import CreateLessonModal from './CreateLessonModal';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 // LT-041: Use a try/catch for the image import so a missing asset doesn't break the build
 let teacherImg = null;
 try {
@@ -13,6 +14,7 @@ try {
 
 const TeacherHero = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { t } = useLanguage();
   const { user } = useApp();
   // LT-014: Use user context for teacher name
   const teacherName = user?.name || 'Teacher';
@@ -40,7 +42,7 @@ const TeacherHero = () => {
             
             {/* Left Section */}
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 2 }}>
-                <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-h3)', margin: '0 0 4px 0' }}>Welcome back,</p>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-h3)', margin: '0 0 4px 0' }}>{t('home.welcome')},</p>
                 <h1 style={{ color: 'var(--color-primary-dark)', fontSize: 'clamp(2rem, 3vw, 2.5rem)', margin: '0 0 var(--spacing-sm) 0', lineHeight: 1.1 }}>
                     {teacherName}!
                 </h1>
@@ -50,7 +52,7 @@ const TeacherHero = () => {
                 
                 <div style={{ alignSelf: 'flex-start' }}>
                     <Button variant="primary" onClick={() => setIsModalOpen(true)} style={{ padding: '12px 24px', fontSize: '1rem', borderRadius: 'var(--radius-full)' }}>
-                        Create a New Lesson <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+                        {t('teacher.createLessonTitle')} <ArrowRight size={18} style={{ marginLeft: '8px' }} />
                     </Button>
                 </div>
             </div>

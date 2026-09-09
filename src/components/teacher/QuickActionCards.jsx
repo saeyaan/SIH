@@ -1,13 +1,16 @@
 import React from 'react';
-import { FileText, Languages, Sparkles, Video, BarChart2, ArrowRight } from 'lucide-react';
+import { FileText, Languages, BarChart2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+// from 'react-router-dom';
 
 const QuickActionCards = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const actions = [
     { 
-        title: 'Create Lesson', 
+        title: t('nav.createLesson'), 
         desc: 'Upload or write new content', 
         icon: FileText, 
         color: '#5856d6', 
@@ -15,7 +18,7 @@ const QuickActionCards = () => {
         path: '/teacher/create'
     },
     { 
-        title: 'Translate Content', 
+        title: t('nav.translate'), 
         desc: 'Convert to multiple languages', 
         icon: Languages, 
         color: '#34c759', 
@@ -23,23 +26,7 @@ const QuickActionCards = () => {
         path: '/teacher/translate'
     },
     { 
-        title: 'Simplify with AI', 
-        desc: 'Make content easy for young learners', 
-        icon: Sparkles, 
-        color: '#ff3b30', 
-        bg: 'var(--color-pastel-pink)',
-        path: '/teacher/simplify'
-    },
-    { 
-        title: 'Start Live Class', 
-        desc: 'Teach with live translation', 
-        icon: Video, 
-        color: '#ff9500', 
-        bg: 'var(--color-pastel-yellow)',
-        path: '/teacher/live'
-    },
-    { 
-        title: 'View Analytics', 
+        title: t('nav.analytics'), 
         desc: 'Understand your classroom better', 
         icon: BarChart2, 
         color: '#8e44ad', 
@@ -49,7 +36,7 @@ const QuickActionCards = () => {
   ];
 
   return (
-    <div className="grid-cols-5" style={{ marginBottom: 'var(--spacing-xxl)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xxl)' }}>
       {actions.map((action, idx) => (
         <div 
             key={idx} 

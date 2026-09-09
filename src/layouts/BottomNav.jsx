@@ -1,21 +1,24 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, MessageSquare, Mic, User } from 'lucide-react';
+import { Home, BookOpen, MessageSquare, Languages, User } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const BottomNav = () => {
+  const { t } = useLanguage();
+
   const navItems = [
-    { name: 'Home', icon: Home, path: '/' },
-    { name: 'Learn', icon: BookOpen, path: '/learn' },
-    { name: 'Ask AI', icon: MessageSquare, path: '/ask-ai' },
-    { name: 'Speak', icon: Mic, path: '/speak' },
-    { name: 'Profile', icon: User, path: '/profile' },
+    { name: t('nav.home'), icon: Home, path: '/' },
+    { name: t('nav.learn'), icon: BookOpen, path: '/learn' },
+    { name: t('nav.askAI'), icon: MessageSquare, path: '/ask-ai' },
+    { name: t('nav.translate'), icon: Languages, path: '/translate' },
+    { name: t('nav.profile'), icon: User, path: '/profile' },
   ];
 
   return (
     <nav className="bottom-nav">
       {navItems.map((item) => (
         <NavLink 
-          key={item.name} 
+          key={item.path} 
           to={item.path}
           className={({ isActive }) => `bottom-nav-item ${isActive || (item.path === '/' && window.location.pathname === '') ? 'active' : ''}`}
         >

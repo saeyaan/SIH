@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
-import { Languages, ArrowRightLeft, Copy, Loader2, Volume2, Square } from 'lucide-react';
+import { Languages, ArrowRightLeft, Copy, Loader2, Volume2, Square, Mic, MicOff } from 'lucide-react';
 import { translateText } from '../utils/translationService';
 
 const Translate = () => {
@@ -12,7 +13,44 @@ const Translate = () => {
   const [targetLang, setTargetLang] = useState('Hindi');
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [notConfiguredMsg, setNotConfiguredMsg] = useState('');
   const { addToast } = useToast();
+  const { t } = useLanguage();
+  
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSourceText(prev => prev ? `${prev} ${transcript}` : transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        setIsListening(false);
+        if (event.error !== 'aborted') {
+          addToast(`Speech recognition error: ${event.error}`, 'error');
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      window.speechSynthesis.cancel();
+    };
+  }, []);
 
   const isCombinationSupported = (src, tgt) => {
     if (src === tgt) return false;
@@ -23,24 +61,26 @@ const Translate = () => {
   };
 
   const handleTranslate = async () => {
-    if (!sourceText.trim()) {
-      addToast('Please enter text to translate.', 'warning');
-      return;
-    }
-
-    if (!isCombinationSupported(sourceLang, targetLang)) {
-      addToast('This language combination is not supported.', 'error');
+    if (!sourceText.trim() || !isValidPair) {
+      addToast('Please enter text and choose a valid combination.', 'warning');
       return;
     }
     
     setIsTranslating(true);
+    setNotConfiguredMsg('');
     setTranslatedText('');
     
     try {
       const result = await translateText(sourceText, sourceLang, targetLang);
-      setTranslatedText(result);
+      if (result.success) {
+        setTranslatedText(result.text);
+      } else {
+        setTranslatedText('');
+        setNotConfiguredMsg(result.message);
+      }
     } catch (error) {
-      addToast('Translation failed. Please try again.', 'error');
+      console.error('Translation error:', error);
+      addToast(error.message || 'Translation failed. Please try again.', 'error');
     } finally {
       setIsTranslating(false);
     }
@@ -54,6 +94,9 @@ const Translate = () => {
     setTranslatedText('');
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
   };
 
   const handleCopy = async () => {
@@ -94,6 +137,28 @@ const Translate = () => {
     setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
   };
+  
+  const handleListen = () => {
+    if (!recognitionRef.current) {
+      addToast('Speech recognition is not supported in this browser. Please use a supported browser or type your text.', 'warning');
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      const langCodeMap = {
+        'English': 'en-IN',
+        'Hindi': 'hi-IN',
+        'Bengali': 'bn-IN'
+      };
+      recognitionRef.current.lang = langCodeMap[sourceLang] || 'en-US';
+      recognitionRef.current.start();
+      setIsListening(true);
+      addToast('Listening...', 'info');
+    }
+  };
 
   const isValidPair = isCombinationSupported(sourceLang, targetLang);
 
@@ -104,7 +169,7 @@ const Translate = () => {
           <h2 style={{ color: 'var(--color-primary-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Languages /> Translator
           </h2>
-          <p>Understand anything in your preferred language.</p>
+          <p>{t('translate.subtitle')}</p>
         </div>
 
         <Card style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
@@ -116,6 +181,7 @@ const Translate = () => {
                 setSourceLang(e.target.value);
                 window.speechSynthesis.cancel();
                 setIsSpeaking(false);
+                if (isListening && recognitionRef.current) recognitionRef.current.stop();
               }}
               className="input-field"
               style={{ flex: 1, cursor: 'pointer', fontWeight: 600 }}
@@ -154,21 +220,34 @@ const Translate = () => {
             </div>
           )}
 
+          {notConfiguredMsg && (
+            <div style={{ background: 'var(--color-bg-warning)', color: '#856404', padding: '12px', borderRadius: 'var(--radius-md)', textAlign: 'center', fontSize: '0.95rem', border: '1px solid #ffeeba' }}>
+              <strong>Notice:</strong> {notConfiguredMsg}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '280px' }}>
+            <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
               <textarea 
                 value={sourceText}
                 onChange={(e) => setSourceText(e.target.value)}
-                placeholder="Enter text to translate..."
+                placeholder={t('translate.enterText')}
                 className="input-field"
                 style={{ width: '100%', height: '180px', resize: 'none' }}
               />
+              <button 
+                onClick={handleListen}
+                title={isListening ? "Stop listening" : "Start dictation"}
+                style={{ position: 'absolute', bottom: '16px', right: '16px', background: isListening ? 'var(--color-danger)' : 'var(--color-primary)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', boxShadow: 'var(--shadow-neu-outer-sm)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: isListening ? 'pulse 1.5s infinite' : 'none' }}
+              >
+                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+              </button>
             </div>
             <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
               <textarea 
                 value={translatedText}
                 readOnly
-                placeholder="Translation will appear here..."
+                placeholder={t('translate.willAppear')}
                 className="input-field"
                 style={{ width: '100%', height: '180px', resize: 'none', color: 'var(--color-primary-dark)', fontWeight: 600, background: 'var(--color-bg-card)', boxShadow: 'var(--shadow-neu-outer-sm)' }}
               />
@@ -194,10 +273,18 @@ const Translate = () => {
           </div>
 
           <Button variant="primary" onClick={handleTranslate} disabled={isTranslating || !isValidPair || !sourceText.trim()} style={{ display: 'flex', justifyContent: 'center' }}>
-            {isTranslating ? <><Loader2 size={20} className="spin-animation" /> Translating...</> : 'Translate'}
+            {isTranslating ? <><Loader2 size={20} className="spin-animation" /> {t('translate.translating')}</> : t('translate.translateBtn')}
           </Button>
           
         </Card>
+        
+        <style>{`
+          @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+          }
+        `}</style>
       </div>
     </>
   );

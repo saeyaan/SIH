@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabaseClient';
+
 export const translateText = async (text, sourceLang, targetLang) => {
   const langCodeMap = {
     'English': 'en',
@@ -9,18 +11,32 @@ export const translateText = async (text, sourceLang, targetLang) => {
   const tl = langCodeMap[targetLang] || 'hi';
 
   try {
-    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
-    if (!response.ok) {
-      throw new Error('Translation request failed');
-    }
-    const data = await response.json();
-    let translated = '';
-    data[0].forEach(item => {
-      if (item[0]) {
-        translated += item[0];
+    const { data, error } = await supabase.functions.invoke('translate', {
+      body: { 
+        text, 
+        sourceLanguage: sl, 
+        targetLanguage: tl 
       }
     });
-    return translated;
+
+    if (error) {
+      console.error('Supabase Edge Function Error:', error);
+      throw new Error(error.message || 'Translation request failed');
+    }
+
+    if (data?.notConfigured) {
+      return { success: false, message: data.message };
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
+    if (!data?.translatedText) {
+      throw new Error('No translation returned from server');
+    }
+
+    return { success: true, text: data.translatedText };
   } catch (error) {
     console.error('Translation error:', error);
     throw error;

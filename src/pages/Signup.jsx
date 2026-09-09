@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { BookOpen, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Button from '../components/Button';
 import { useToast } from '../context/ToastContext';
-import { useApp } from '../context/AppContext';
+import { supabase } from '../lib/supabaseClient';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -11,11 +11,14 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('Student');
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirm: '', institution: '', terms: false });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { setUser } = useApp();
-
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
+    if (!supabase) {
+      addToast('Supabase configuration is missing. Cannot sign up.', 'error');
+      return;
+    }
     if (!formData.name || !formData.email || !formData.password) {
       addToast('Please fill all required fields', 'error');
       return;
@@ -29,19 +32,42 @@ const Signup = () => {
       return;
     }
     
-    // Simulate signup
-    setUser(prev => ({ 
-        ...prev, 
-        name: formData.name, 
-        email: formData.email, 
-        role: role.toLowerCase() 
-    }));
-    addToast('Account created successfully! Logging in...', 'success');
+    setIsSubmitting(true);
     
-    if (role === 'Teacher') {
-      navigate('/teacher/dashboard');
-    } else {
-      navigate('/');
+    try {
+      const roleName = role.toLowerCase();
+      const studentCode = roleName === 'student' ? 'STU-' + Math.floor(Math.random() * 10000) : null;
+      const teacherId = roleName === 'teacher' ? 'TCH-' + Math.floor(Math.random() * 10000) : null;
+
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            role: roleName,
+            student_code: studentCode,
+            teacher_id: teacherId
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      addToast('Account created successfully!', 'success');
+      
+      // If there's no session, it means email confirmation is required.
+      if (!data?.session) {
+         addToast('Please check your email to confirm your account.', 'info');
+         navigate('/login');
+      }
+      // If there IS a session, AppContext will detect it and auto-redirect.
+
+    } catch (err) {
+      console.error(err);
+      addToast(err.message || 'Account creation failed.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,12 +89,12 @@ const Signup = () => {
           <p>Join BhashaSetu and start learning</p>
         </div>
 
-        {/* LT-006: Removed 'Admin' from role options */}
         <div style={{ display: 'flex', gap: '10px', background: 'var(--color-bg-input)', padding: '6px', borderRadius: 'var(--radius-full)', marginBottom: 'var(--spacing-xl)' }}>
           {['Student', 'Teacher'].map(r => (
             <button 
               key={r}
               onClick={() => setRole(r)}
+              type="button"
               style={{ flex: 1, padding: '10px 0', border: 'none', borderRadius: 'var(--radius-full)', background: role === r ? 'var(--color-bg-card)' : 'transparent', color: role === r ? 'var(--color-primary)' : 'var(--color-text-muted)', fontWeight: role === r ? 700 : 500, boxShadow: role === r ? 'var(--shadow-neu-outer-sm)' : 'none', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               {r}
@@ -99,19 +125,6 @@ const Signup = () => {
               onChange={e => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
-          
-          {role !== 'Admin' && (
-            <div className="form-group">
-                <label className="form-label">School / Institution (Optional)</label>
-                <input 
-                type="text" 
-                className="input-field" 
-                placeholder="Where do you study/teach?"
-                value={formData.institution}
-                onChange={e => setFormData({ ...formData, institution: e.target.value })}
-                />
-            </div>
-          )}
 
           <div className="form-group">
             <label className="form-label">Password</label>
@@ -157,8 +170,8 @@ const Signup = () => {
               </label>
           </div>
 
-          <Button variant="primary" type="submit" style={{ width: '100%' }}>
-            Sign Up
+          <Button variant="primary" type="submit" style={{ width: '100%' }} disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="spin-animation" size={20} /> : 'Sign Up'}
           </Button>
         </form>
 

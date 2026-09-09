@@ -1,3 +1,4 @@
+import { supabase } from '../../lib/supabaseClient';
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -20,8 +21,8 @@ const TeacherHeader = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    setUser(prev => ({ ...prev, role: 'student' }));
+  const handleLogout = async () => {
+    if(supabase) await supabase.auth.signOut();
     navigate('/login');
   };
 

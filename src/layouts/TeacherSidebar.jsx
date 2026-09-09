@@ -1,19 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Users, PlusCircle, FileText, Video, Languages, MessageSquare, BarChart, Bell, BookOpen, Leaf } from 'lucide-react';
+import { Home, Users, PlusCircle, FileText, Languages, MessageSquare, BarChart, Bell, BookOpen, Leaf, User } from 'lucide-react';
 import Card from '../components/Card';
+import { useLanguage } from '../context/LanguageContext';
 
 const TeacherSidebar = () => {
+  const { t, uiLanguage, setUiLanguage } = useLanguage();
+
   const navItems = [
-    { name: 'Home', icon: Home, path: '/teacher/dashboard' },
-    { name: 'My Classes', icon: Users, path: '/teacher/classes' },
-    { name: 'Create Lesson', icon: PlusCircle, path: '/teacher/create' },
-    { name: 'My Lessons', icon: FileText, path: '/teacher/lessons' },
-    { name: 'Live Class', icon: Video, path: '/teacher/live' },
-    { name: 'Translate', icon: Languages, path: '/teacher/translate' },
-    { name: 'Student Interaction', icon: MessageSquare, path: '/teacher/chat' },
-    { name: 'Analytics', icon: BarChart, path: '/teacher/analytics' },
-    { name: 'Reminders', icon: Bell, path: '/teacher/reminders' },
+    { name: t('nav.home'), icon: Home, path: '/teacher/dashboard' },
+    { name: t('nav.myClasses'), icon: Users, path: '/teacher/classes' },
+    { name: t('nav.createLesson'), icon: PlusCircle, path: '/teacher/create' },
+    { name: t('nav.translate'), icon: Languages, path: '/teacher/translate' },
+    { name: t('nav.studentInteraction'), icon: MessageSquare, path: '/teacher/chat' },
+    { name: t('nav.analytics'), icon: BarChart, path: '/teacher/analytics' },
+    { name: t('nav.reminders'), icon: Bell, path: '/teacher/reminders' },
+    { name: t('nav.profile'), icon: User, path: '/teacher/profile' },
   ];
 
   return (
@@ -24,19 +26,19 @@ const TeacherSidebar = () => {
           <BookOpen size={20} color="var(--color-primary-dark)" strokeWidth={2.5} />
         </div>
         <div>
-          <h2 style={{ margin: 0, fontSize: 'var(--fs-h3)', color: 'var(--color-primary-dark)' }}>BhashaSetu</h2>
-          <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: '0.5px' }}>EVERY CHILD LEARNS</span>
+          <h2 style={{ margin: 0, fontSize: 'var(--fs-h3)', color: 'var(--color-primary-dark)' }}>{t('common.bhashaSetu')}</h2>
+          <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: '0.5px' }}>{t('common.everyChildLearns')}</span>
         </div>
       </div>
 
       <div style={{ marginBottom: 'var(--spacing-md)', padding: '0 10px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 700, letterSpacing: '1px' }}>FOR TEACHERS</span>
+        <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 700, letterSpacing: '1px' }}>{t('common.forTeachers')}</span>
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
         {navItems.map((item) => (
           <NavLink 
-            key={item.name} 
+            key={item.path} 
             to={item.path}
             className={({ isActive }) => `teacher-nav-item ${isActive ? 'active' : ''}`}
             style={({ isActive }) => ({
@@ -64,6 +66,8 @@ const TeacherSidebar = () => {
         
         <select 
           className="input-field"
+          value={uiLanguage}
+          onChange={(e) => setUiLanguage(e.target.value)}
           style={{ cursor: 'pointer', fontWeight: 600, padding: '10px 16px' }}
         >
           <option value="English">🌐 English</option>
@@ -76,7 +80,7 @@ const TeacherSidebar = () => {
             <Leaf size={16} color="var(--color-secondary)" />
           </div>
           <p style={{ margin: 0, fontSize: 'var(--fs-small)', fontWeight: 600, color: 'var(--color-primary-dark)', fontStyle: 'italic' }}>
-            “Teachers Plant Seeds That Grow Forever.”
+            {t('teacher.quote')}
           </p>
         </Card>
       </div>

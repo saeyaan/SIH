@@ -1,17 +1,20 @@
+import { supabase } from '../lib/supabaseClient';
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, Bell, User as UserIcon, Settings, LogOut, Sun, Moon } from 'lucide-react';
+import { BookOpen, Bell, User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from "../context/LanguageContext";
 import { mockNotifications } from '../data/mockData';
 import Modal from './Modal';
 import Button from './Button';
 
 const Header = () => {
   const isDesktop = useMediaQuery('(min-width: 768px)');
-  const { user, theme, toggleTheme } = useApp();
+  const { user } = useApp();
   const { addToast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,8 +35,9 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setShowSignOut(false);
+    if(supabase) await supabase.auth.signOut();
     addToast('Signed out successfully!', 'success');
     navigate('/login');
   };
@@ -62,7 +66,7 @@ const Header = () => {
             <BookOpen size={24} color="var(--color-primary-dark)" strokeWidth={2.5} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary-dark)', letterSpacing: '-0.5px', lineHeight: 1 }}>BhashaSetu</span>
+            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary-dark)', letterSpacing: '-0.5px', lineHeight: 1 }}>{t('common.bhashaSetu')}</span>
           </div>
         </div>
 
@@ -120,28 +124,24 @@ const Header = () => {
                 width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary-light)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold'
               }}>
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                {user?.name ? user?.name.charAt(0).toUpperCase() : 'U'}
               </div>
-              {isDesktop && <span style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--color-text-main)' }}>{(user.name || 'User').split(' ')[0]}</span>}
+              {isDesktop && <span style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--color-text-main)' }}>{(user?.name || 'User').split(' ')[0]}</span>}
             </div>
             
             {showProfileMenu && (
               <div style={{ position: 'absolute', top: '120%', right: 0, width: '220px', background: 'var(--color-bg-card)', boxShadow: 'var(--shadow-neu-outer)', border: '1px solid white', borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-sm)', zIndex: 110, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--color-border)', marginBottom: '4px' }}>
-                  <span style={{ display: 'block', fontWeight: 'bold', color: 'var(--color-text-main)', fontSize: '0.9rem' }}>{user.name}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{user.email || 'student@bhashasetu.app'}</span>
+                  <span style={{ display: 'block', fontWeight: 'bold', color: 'var(--color-text-main)', fontSize: '0.9rem' }}>{user?.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{user?.email || 'student@bhashasetu.app'}</span>
                 </div>
                 
                 <button onClick={() => { navigate('/profile'); setShowProfileMenu(false); }} className="menu-btn">
-                  <UserIcon size={16} /> My Profile
-                </button>
-                <button onClick={() => { toggleTheme(); setShowProfileMenu(false); }} className="menu-btn">
-                  {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />} 
-                  {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                  <UserIcon size={16} /> {t("profile.myProfile")}
                 </button>
                 <div style={{ height: '1px', background: 'var(--color-border)', margin: '4px 0' }}></div>
                 <button onClick={() => { setShowSignOut(true); setShowProfileMenu(false); }} className="menu-btn text-danger">
-                  <LogOut size={16} /> Sign Out
+                  <LogOut size={16} /> {t("common.signOut")}
                 </button>
               </div>
             )}
@@ -150,11 +150,11 @@ const Header = () => {
         </div>
       </header>
 
-      <Modal isOpen={showSignOut} onClose={() => setShowSignOut(false)} title="Sign Out">
+      <Modal isOpen={showSignOut} onClose={() => setShowSignOut(false)} title={t('common.signOut')}>
         <p>Are you sure you want to sign out of your account?</p>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-          <Button variant="secondary" onClick={() => setShowSignOut(false)} style={{ flex: 1 }}>Cancel</Button>
-          <Button variant="primary" onClick={handleSignOut} style={{ flex: 1, background: 'var(--color-danger)' }}>Sign Out</Button>
+          <Button variant="secondary" onClick={() => setShowSignOut(false)} style={{ flex: 1 }}>{t('common.cancel')}</Button>
+          <Button variant="primary" onClick={handleSignOut} style={{ flex: 1, background: 'var(--color-danger)' }}>{t('common.signOut')}</Button>
         </div>
       </Modal>
 
